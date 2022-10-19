@@ -13,7 +13,22 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
+import {
+  resolveHtmlPath,
+  RESOURCES_PATH,
+  isDevelopment,
+  operatingSystem,
+  quitApp,
+} from './util';
+import { hideWindow, showWindow } from './windowHandlers/windowHandlers';
+import { registerGlobalKeyboardShortcut } from './WithubSetup/ShortcutHandlers/registerGlobalKeyboardShortcut';
+import { setKeyboardShortcuts } from './WithubSetup/ShortcutHandlers/setKeyboardShortcuts';
+import { centerWindow } from 'electron-util';
+import { CreateTray } from './WithubSetup/tray';
+import { setDefaultProtocolClient } from './WithubSetup/defaultProtocolHandler';
+import { openUrlHandler } from './WithubSetup/defaultProtocolHandler';
+import { secondInstanceHandler } from './WithubSetup/defaultProtocolHandler';
+import createWindow from './windowHandlers/createWindow';
 
 class AppUpdater {
   constructor() {
@@ -23,7 +38,9 @@ class AppUpdater {
   }
 }
 
-let mainWindow: BrowserWindow | null = null;
+var mainWindow: any;
+let tray;
+let deeplinkingUrl;
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
@@ -56,60 +73,24 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const createWindow = async () => {
-  if (isDebug) {
-    await installExtensions();
-  }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
-
-  mainWindow = new BrowserWindow({
-    show: false,
-    width: 1024,
-    height: 728,
-    icon: getAssetPath('icon.png'),
-    webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
-  });
-
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
-
-  mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
-      throw new Error('"mainWindow" is not defined');
-    }
-    if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
+const toggleWindow = () => {
+  try {
+    if (mainWindow.isVisible()) {
+      // if (window.isFocused()) {
+      hideWindow(mainWindow);
+      // } else {
+      // showWindow(window);
+      // }
     } else {
-      mainWindow.show();
+      showWindow(mainWindow);
     }
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
-
-  // Open urls in the user's browser
-  mainWindow.webContents.setWindowOpenHandler((edata) => {
-    shell.openExternal(edata.url);
-    return { action: 'deny' };
-  });
-
-  // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
-  new AppUpdater();
+  } catch (error) {
+    console.log('toggleWindow');
+    mainWindow = createWindow();
+    showWindow(mainWindow);
+  }
+  console.log('showKBAR');
+  // mainWindow.webContents.send('showKBar');
 };
 
 /**
@@ -127,11 +108,66 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    createWindow();
+    //global shortcut toggle
+    registerGlobalKeyboardShortcut(toggleWindow);
+    //in window shortcuts
+    setKeyboardShortcuts();
+    // enforce macOS application location to prevent read-only app launch [prompts user to move app to Applications folder, if not already there]
+    // enforceMacOSAppLocation();
+    // appIcon
+    app.getFileIcon(path.join(RESOURCES_PATH, 'icons', 'withub-16.png'));
+    tray = CreateTray();
+  })
+  .then(() => {
+    // updater.enabled = false;
+    if (!isDevelopment) {
+      autoUpdater.checkForUpdates();
+    }
+    mainWindow = createWindow();
+
+    //should fix open window on launch
+    // if (windowExists(mainWindow)) {
+    //   mainWindow.isVisible() ? hideWindow(mainWindow) : showWindow(mainWindow);
+    // } else {
+    //   mainWindow = createWindow();
+    //   showWindow(mainWindow);
+    // }
+
     app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
+      if (mainWindow === null) {
+        mainWindow = createWindow();
+      }
     });
   })
-  .catch(console.log);
+  .catch((err) => {
+    console.log(err);
+  });
+app.on('browser-window-focus', () => {
+  centerWindow(mainWindow);
+});
+app.on('ready', () => {
+  // mainWindowID = getMainWindowId(mainWindow)
+  setDefaultProtocolClient();
+});
+
+app.on('open-url', function (event, url) {
+  event.preventDefault();
+  deeplinkingUrl = url;
+  console.log('open-url', deeplinkingUrl);
+  openUrlHandler(mainWindow, deeplinkingUrl);
+});
+
+// Force single application instance
+const gotTheLock = app.requestSingleInstanceLock();
+secondInstanceHandler(gotTheLock, deeplinkingUrl, mainWindow);
+
+// Quit when all windows are closed.
+app.on('window-all-closed', () => {
+  // On macOS it is common for applications and their menu bar
+  // to stay active until the user quits explicitly with Cmd + Q
+  // TODO: fix bug where on-top and focus properties of our window are lost
+  if (operatingSystem !== 'darwin') {
+    quitApp();
+    // app.hide();
+  }
+});
