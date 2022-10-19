@@ -65,6 +65,7 @@ const configuration: webpack.Configuration = {
       {
         test: /\.s?css$/,
         use: [
+          'postcss-loader',
           'style-loader',
           {
             loader: 'css-loader',
@@ -75,6 +76,7 @@ const configuration: webpack.Configuration = {
             },
           },
           'sass-loader',
+          
         ],
         include: /\.module\.s?(c|a)ss$/,
       },

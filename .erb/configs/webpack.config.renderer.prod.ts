@@ -41,6 +41,7 @@ const configuration: webpack.Configuration = {
       {
         test: /\.s?(a|c)ss$/,
         use: [
+          'postcss-loader',
           MiniCssExtractPlugin.loader,
           {
             loader: 'css-loader',
@@ -51,6 +52,7 @@ const configuration: webpack.Configuration = {
             },
           },
           'sass-loader',
+          
         ],
         include: /\.module\.s?(c|a)ss$/,
       },
