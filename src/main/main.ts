@@ -115,10 +115,7 @@ app
     // enforce macOS application location to prevent read-only app launch [prompts user to move app to Applications folder, if not already there]
     // enforceMacOSAppLocation();
     // appIcon
-    app.getFileIcon(
-      path.join(RESOURCES_PATH, 'icons', 'withub-16.png'),
-      'small'
-    );
+    app.getFileIcon(path.join(RESOURCES_PATH, 'icons', 'withub-16.png'));
     tray = CreateTray();
   })
   .then(() => {

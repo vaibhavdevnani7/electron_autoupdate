@@ -94,14 +94,6 @@ const createWindow = () => {
     // when you should delete the corresponding element.
     window = null;
   });
-
-  // TODO: fire this on cronjob [like every 12/24 hours or so] (and fire this once on first app launch)
-  window.webContents.on('did-finish-load', () => {
-    // here only for testing
-    getSystemAppsAndIcons(window);
-    // maybe do something like this here?
-    // detectSystemAppChanges(window);
-  });
   // eslint-disable-next-line
   new AppUpdater();
   return window;
