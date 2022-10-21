@@ -8,14 +8,7 @@ export const setKeyboardShortcuts = (mainWindow) => {
         mainWindow?.reload();
       };
     const hideApp = () => {
-        // console.log('hideApp');
-        if (mainWindow?.isVisible()) {
-          if (mainWindow?.isFocused()) {
-            hideWindow(mainWindow);
-          }
-        } else {
-          hideWindow(mainWindow);
-        }
+        mainWindow?.hide()
       }
 
     const template = [
@@ -26,9 +19,7 @@ export const setKeyboardShortcuts = (mainWindow) => {
           { label: 'Reload', accelerator: 'CmdOrCtrl+R', click: reloadApp },
           { label: 'QuitWindows', accelerator: 'Alt+F4', click: hideApp },
           { label: 'Escape', accelerator: 'Escape', click: hideApp },
-          // { label: "Toggle Developer Tools", accelerator: "F12", click: toggleDevTools },
-          // { label: "F12", accelerator: "F12", click: toggleDevTools },
-        ],
+        ]
       },
       {
         label: 'Edit',

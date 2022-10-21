@@ -31,7 +31,7 @@
     "email": "support@getwithub.com",
     "url": "https://www.getwithub.com"
   },
-  "main": "./src/main/main.ts",
+  "main": "./src/main/main.js",
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "cross-env NODE_ENV=development eslint --cache"
