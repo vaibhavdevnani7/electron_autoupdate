@@ -1,4 +1,8 @@
-body { text-align: center; margin: 0; font-family: "San Francisco"; }
+body {
+  text-align: center;
+  margin: 0;
+  font-family: 'San Francisco';
+}
 div.container {
   width: 80%;
   position: absolute;
@@ -60,15 +64,15 @@ ul#results {
 ul#results::-webkit-scrollbar {
   width: 6px;
   background-color: transparent;
-} 
+}
 
 ul#results::-webkit-scrollbar-track {
-background-color: transparent;
+  background-color: transparent;
 }
 
 ul#results::-webkit-scrollbar-thumb {
-border-radius: 25px;
-background-color: rgba(0, 0, 0, .5);
+  border-radius: 25px;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 ul li {
@@ -87,13 +91,14 @@ ul li h4 {
   margin: 0;
 }
 
-ul li.selected, ul li:hover {
-  background: #CCC;
+ul li.selected,
+ul li:hover {
+  background: #ccc;
 }
 
 ul li.error {
   font-size: 18px;
-  background: #A92323;
+  background: #a92323;
   color: #fff;
 }
 
@@ -113,62 +118,66 @@ ul li::after {
 }
 
 ul li.terminal::after {
-  content: "Terminal";
+  content: 'Terminal';
   background: #34495e;
 }
 
 ul li.history::after {
-  content: "History";
-  background: #CCC;
+  content: 'History';
+  background: #ccc;
   color: #444;
 }
 
 ul li.dir::after {
-  content: "Directory";
+  content: 'Directory';
   background: #16a085;
 }
 
 ul li.file::after {
-  content: "File";
+  content: 'File';
   background: #ecf0f1;
   color: #444;
 }
 
 ul li.bing::after {
-  content: "Bing";
+  content: 'Bing';
   background: #ffb900;
 }
 
 ul li.google::after {
-  content: "Google";
+  content: 'Google';
   background: #d35400;
 }
 
 ul li.quora::after {
-  content: "Quora";
+  content: 'Quora';
   background: #c0392b;
 }
 
 ul li.app::after {
-  content: "App";
+  content: 'App';
   background: #2ecc71;
 }
 
 ul li.setting::after {
-  content: "Setting";
+  content: 'Setting';
   background: #8e44ad;
 }
 
 ul li.config::after {
-  content: "Configuration";
+  content: 'Configuration';
   background: #1abc9c;
 }
 
-ul li.text::after, ul li.error::after {
+ul li.text::after,
+ul li.error::after {
   padding: 0;
   display: none;
 }
 
-ul li.text.selected, ul li.text:hover, ul li.error.selected, ul li.error:hover {
+ul li.text.selected,
+ul li.text:hover,
+ul li.error.selected,
+ul li.error:hover {
   background: inherit;
 }
