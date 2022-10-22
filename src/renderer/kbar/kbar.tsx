@@ -8,6 +8,9 @@ export const Kbar = () => {
     
     const keyUpHandler = (event: React.KeyboardEvent<HTMLInputElement>) => {
         kbarhandler(event, enteredText);
+        if (event.code === "Enter") {
+            setEnteredText("");
+        }
     };
 
     return (

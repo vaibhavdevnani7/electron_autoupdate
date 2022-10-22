@@ -48,6 +48,7 @@ app.on("ready", () => {
     transparent: true,
     width: 1000,
     height: 600,
+    show: false,
     skipTaskbar: true,
     icon: iconPath,
     frame: false,
@@ -83,7 +84,7 @@ app.on("ready", () => {
     log.info("blur");
     win.hide();
   });
-
+  
   app.on('window-all-closed', () => {
     log.info("window-all-closed");
     globalShortcut.unregisterAll();
@@ -96,6 +97,7 @@ app.on("ready", () => {
   const ret = globalShortcut.register('Alt+E', () => {
     log.info("registering shortcut: " + globalShortcut.isRegistered('Alt+E'));
     win.show();
+    win.focus();
   });
   if (!ret) {
     log.error("registration failed");
@@ -109,7 +111,6 @@ app.on("ready", () => {
   app.on('will-quit', () => {
     // Unregister all shortcuts.
     globalShortcut.unregisterAll();
-    
     log.info("will-quit: ");
   });
 
@@ -119,8 +120,8 @@ app.on("ready", () => {
           win.close();  
       }
       log.info("before-quit: ");
-      
   });
+
   win.webContents.on("new-window", function(event, url) {
     event.preventDefault();
     shell.openExternal(url);
