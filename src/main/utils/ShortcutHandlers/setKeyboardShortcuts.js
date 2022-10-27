@@ -1,14 +1,17 @@
 import { Menu } from "electron";
-import { hideWindow } from "../../windowHandlers/windowHandlers";
 import { quitApp } from "../../util";
-
+import {
+  hideWindow,
+  showWindow,
+  windowExists,
+} from '../windowhandlers';
 export const setKeyboardShortcuts = (mainWindow) => {
 
     const reloadApp = () => {
         mainWindow?.reload();
       };
     const hideApp = () => {
-        mainWindow?.hide()
+        hideWindow(mainWindow)
       }
 
     const template = [
