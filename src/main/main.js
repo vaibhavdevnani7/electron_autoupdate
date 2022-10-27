@@ -8,8 +8,14 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-const { app, BrowserWindow, globalShortcut, ipcMain,shell } = require("electron");
-const path = require("path");
+const {
+  app,
+  BrowserWindow,
+  globalShortcut,
+  ipcMain,
+  shell,
+} = require('electron');
+const path = require('path');
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { initializeAppConfigStore } from './Store';
@@ -22,6 +28,11 @@ import {
 } from './util';
 import { CreateTray } from './utils/tray';
 import { setKeyboardShortcuts } from './utils/ShortcutHandlers/setKeyboardShortcuts';
+import {
+  hideWindow,
+  showWindow,
+  windowExists,
+} from './utils/windowhandlers';
 
 class AppUpdater {
   constructor() {
@@ -41,92 +52,137 @@ const getAssetPath = (...paths) => {
 let iconPath = getAssetPath('withub-16.ico');
 
 
-
-app.on("ready", () => {
-
-  win = new BrowserWindow({
-    transparent: true,
-    width: 1000,
-    height: 600,
-    show: false,
-    skipTaskbar: true,
-    icon: iconPath,
-    frame: false,
-    titleBarStyle: 'customButtonsOnHover',
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true,
-    },
-  });
-
-  win.on("close", () => {
-    log.info("Closing window: ");
-    win = null;
-  });
-
-  win.loadURL(resolveHtmlPath('index.html'));
-
-  win.once('ready-to-show', () => {
-    log.info("ready-to-show: ");
-    win.show()
-    
-    // hide traffic light buttons
-    if (operatingSystem === 'darwin') {
-      win.setWindowButtonVisibility(false);
+function toggleWindow() {
+  try {
+    if (win.isVisible()) {
+      // if (window.isFocused()) {
+      hideWindow(win);
+      // } else {
+      // showWindow(window);
+      // }
+    } else {
+      showWindow(win);
     }
-    // win.webContents.openDevTools();
-    win.webContents.send('windowId', win?.id);
-    store.set('mainWindowId', win?.id);
-  });
-    //Handles the disappear on outside click functionality
-  win.on('blur', () => {
-    log.info("blur");
-    win.hide();
-  });
-  
-  app.on('window-all-closed', () => {
-    log.info("window-all-closed");
-    globalShortcut.unregisterAll();
-    if (process.platform !== 'darwin') {
-        log.info("window-all-closed, quiting app: ");
-        app.quit()
-    }
-  });
-
-  const ret = globalShortcut.register('Alt+E', () => {
-    log.info("registering shortcut: " + globalShortcut.isRegistered('Alt+E'));
-    win.show();
-    win.focus();
-  });
-  if (!ret) {
-    log.error("registration failed");
+  } catch (error) {
+    console.log('toggleWindow');
+    win = createWindow();
+    showWindow(win);
   }
-  setKeyboardShortcuts(win);
+  console.log('showKBAR');
+  // win.webContents.send('showKBar');
+}
 
-  app.getFileIcon(path.join(RESOURCES_PATH, 'icons', 'withub-16.png'));
-  
-  tray = CreateTray();
+const gotTheLock = app.requestSingleInstanceLock();
 
-  app.on('will-quit', () => {
-    // Unregister all shortcuts.
-    globalShortcut.unregisterAll();
-    log.info("will-quit: ");
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
+    }
   });
 
-  app.on('before-quit', () => {
-      if(win) {
-          win.removeAllListeners('close');
-          win.close();  
+  // Create win, load the rest of the app, etc...
+  app.on('ready', () => {
+    win = new BrowserWindow({
+      transparent: true,
+      width: 1000,
+      height: 600,
+      show: false,
+      skipTaskbar: true,
+      icon: iconPath,
+      frame: false,
+      titleBarStyle: 'customButtonsOnHover',
+      minimizable: false,
+      // resizable: false,
+      maximizable: false,
+      center: true,
+      useContentSize: true,
+      autoHideMenuBar: true,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+        enableRemoteModule: true,
+      },
+    });
+
+    win.on('close', () => {
+      log.info('Closing window: ');
+      win = null;
+    });
+
+    win.loadURL(resolveHtmlPath('index.html'));
+
+    win.once('ready-to-show', () => {
+      log.info('ready-to-show: ');
+      showWindow(win);
+
+      // hide traffic light buttons
+      if (operatingSystem === 'darwin') {
+        win.setWindowButtonVisibility(false);
       }
-      log.info("before-quit: ");
-  });
+      // win.webContents.openDevTools();
+      win.webContents.send('windowId', win?.id);
+      store.set('winId', win?.id);
+    });
+    //Handles the disappear on outside click functionality
+    win.on('blur', () => {
+      log.info('blur');
+      hideWindow(win);
+    });
 
-  win.webContents.on("new-window", function(event, url) {
-    event.preventDefault();
-    shell.openExternal(url);
-  });
-  
-  new AppUpdater();
+    app.on('window-all-closed', () => {
+      log.info('window-all-closed');
+      globalShortcut.unregisterAll();
+      if (process.platform !== 'darwin') {
+        log.info('window-all-closed, quiting app: ');
+        app.quit();
+      }
+    });
 
-});
+    const ret = globalShortcut.register('Alt+E', () => {
+      log.info('registering shortcut: ' + globalShortcut.isRegistered('Alt+E'));
+      toggleWindow()
+    });
+    if (!ret) {
+      log.error('registration failed');
+    }
+    setKeyboardShortcuts(win);
+
+    app.getFileIcon(path.join(RESOURCES_PATH, 'icons', 'withub-16.png'));
+
+    tray = CreateTray();
+
+    app.on('will-quit', () => {
+      // Unregister all shortcuts.
+      globalShortcut.unregisterAll();
+      log.info('will-quit: ');
+    });
+
+    app.on('before-quit', () => {
+      if (win) {
+        win.removeAllListeners('close');
+        win.close();
+      }
+      log.info('before-quit: ');
+    });
+
+    win.on('restore', (e) => {
+      win.setSize(1000, 600);
+    });  //workaround for issue in windowhandler.js
+
+    win.webContents.on('new-window', (event, url) => {
+      if (!url.includes('api.usewithub.com/')) {
+        event.preventDefault();
+        shell.openExternal(url);
+      } else {
+        showWindow(win);
+      }
+    });
+
+    new AppUpdater();
+  });
+}
