@@ -237,8 +237,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "WitHubHQ",
-      "repo": "withub-electron-react"
+      "owner": "vaibhavdevnani7",
+      "repo": "electron_autoupdate"
     }
   },
   "devEngines": {
